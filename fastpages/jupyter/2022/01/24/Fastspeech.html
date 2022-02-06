@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Coding Fastspeech2 a TTS system | fastpages</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Coding Fastspeech2 a TTS system" />
+<meta name="author" content="Jesse Deng" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Part of a series where I read and implement deep learning papers" />
+<meta property="og:description" content="Part of a series where I read and implement deep learning papers" />
+<link rel="canonical" href="https://torphix.github.io/blog/fastpages/jupyter/2022/01/24/Fastspeech.html" />
+<meta property="og:url" content="https://torphix.github.io/blog/fastpages/jupyter/2022/01/24/Fastspeech.html" />
+<meta property="og:site_name" content="fastpages" />
+<meta property="og:image" content="https://torphix.github.io/blog/images/mel.jpeg" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-01-24T00:00:00-06:00" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta property="twitter:image" content="https://torphix.github.io/blog/images/mel.jpeg" />
+<meta property="twitter:title" content="Coding Fastspeech2 a TTS system" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jesse Deng"},"dateModified":"2022-01-24T00:00:00-06:00","datePublished":"2022-01-24T00:00:00-06:00","description":"Part of a series where I read and implement deep learning papers","headline":"Coding Fastspeech2 a TTS system","image":"https://torphix.github.io/blog/images/mel.jpeg","mainEntityOfPage":{"@type":"WebPage","@id":"https://torphix.github.io/blog/fastpages/jupyter/2022/01/24/Fastspeech.html"},"url":"https://torphix.github.io/blog/fastpages/jupyter/2022/01/24/Fastspeech.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://torphix.github.io/blog/feed.xml" title="fastpages" /><link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">fastpages</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Coding Fastspeech2 a TTS system</h1><p class="page-description">Part of a series where I read and implement deep learning papers</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2022-01-24T00:00:00-06:00" itemprop="datePublished">
+        Jan 24, 2022
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Jesse Deng</span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      5 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#fastpages">fastpages</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#jupyter">jupyter</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-justify-center">
+          <div class="px-2">
+
+    <a href="https://github.com/torphix/blog/tree/master/_notebooks/2022-01-24-Fastspeech.ipynb" role="button" target="_blank">
+<img class="notebook-badge-image" src="/blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://mybinder.org/v2/gh/torphix/blog/master?filepath=_notebooks%2F2022-01-24-Fastspeech.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/binder.svg" alt="Open In Binder"/>
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://colab.research.google.com/github/torphix/blog/blob/master/_notebooks/2022-01-24-Fastspeech.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+          <div class="px-2">
+  <a href="https://deepnote.com/launch?url=https%3A%2F%2Fgithub.com%2Ftorphix%2Fblog%2Fblob%2Fmaster%2F_notebooks%2F2022-01-24-Fastspeech.ipynb" target="_blank">
+      <img class="notebook-badge-image" src="/blog/assets/badges/deepnote.svg" alt="Launch in Deepnote"/>
+  </a>
+</div>
+
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul id="toc" class="section-nav">
+<li class="toc-entry toc-h1"><a href="#What-I-learnt-summary">What I learnt summary </a></li>
+<li class="toc-entry toc-h1"><a href="#Data-pipline">Data-pipline </a></li>
+<li class="toc-entry toc-h1"><a href="#Model">Model </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Quantized-Embeddings">Quantized Embeddings </a></li>
+<li class="toc-entry toc-h3"><a href="#Duration-Predictor-&-Length-Regulator">Duration Predictor &amp; Length Regulator </a></li>
+<li class="toc-entry toc-h3"><a href="#Transformer">Transformer </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h1"><a href="#Future-work">Future work </a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2022-01-24-Fastspeech.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="What-I-learnt-summary">
+<a class="anchor" href="#What-I-learnt-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>What I learnt summary<a class="anchor-link" href="#What-I-learnt-summary"> </a>
+</h1>
+<ul>
+<li>
+<p><code>Isolate various modules if loss not converging, check inputs and outputs to each section. Ensure data is correct.</code>
+Most important thing I learnt, check all inputs and outputs after setting everything up, especially if you think its all been done correctly. 
+I had normalised the pitch data incorrectly to begin with, this caused the model to appear to converge however on the testset only garbage was being produced. Took me a while but I found the error by looking at the raw numerical data and realizing most of the values where centered around the number -4, I went back to the datapipeline and realized I had incorrectly normalized the values... SMH.</p>
+</li>
+<li>
+<p><code>Overfit on a subset of the data say, 10 datapoints.</code> This is useful as if your model is really broken even this won't converge, however can be decieving as even with a incorrectly normalized feature-set (pitch) the model was converging. This led me to believe that everything was okay when it really wasn't, (Got this from Andrej Karpathys lectures on Youtube).</p>
+</li>
+<li>
+<p><code>Start with the simplest working prototype and build up</code> Obvious, but my excitement at working on a new project caused me to add additional complexity before the core featureset was in place.</p>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Where possible extract additional features from the data and train preceding sections of the model</code> to facilitate faster convergance and direct the model search space towards the final objective. Fastspeech2 uses pitch and energy feature embeddings, training sections of the network preceding the mel output.</p>
+</li>
+<li>
+<p><code>Identical inputs that map to different output distributions require additional information</code>
+I began by training on a multispeaker dataset (LibriSpeech) and the model was creating poor outputs, In hind sight this was obviously due to the fact that the same words by different speakers can result in rather disparate outputs (eg: male voice vs female voice with words in different contexts). To improve the model performance speaker embeddings where required.
+<code>TLDR; Inform the model of input/output idiosyncrasies by adding additional information.</code></p>
+</li>
+<li>
+<p><code>Residuals are great.</code> Adding a residual improved the loss by a large factor, (due to increasing gradient flow).</p>
+</li>
+<li>
+<p><code>Regularization is super important</code>
+dropout, batchnorm etc.</p>
+</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Data-pipline">
+<a class="anchor" href="#Data-pipline" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data-pipline<a class="anchor-link" href="#Data-pipline"> </a>
+</h1>
+<p>The most important thing to a deep learning model is the data, Fastspeech2 (FS2) is clever in that it extracts additional features (pitch and energy) from the audio and essentially trains various parts of the model to learn the relationship between input phonemes and those features.</p>
+<p>Step 1 was to create an efficient data pipeline, FS2 uses phonemes, pitch, energy and phoneme durations as inputs whilst training and Melspectrograms <a href="https://en.wikipedia.org/wiki/Mel-frequency_cepstrum">https://en.wikipedia.org/wiki/Mel-frequency_cepstrum</a> pitch, energy and durations as targets to differentiate against.
+All data was normalized by subtracting the mean and dividing by the standard deviation (min max normalization will be tested in the future).</p>
+<p>I also wanted the pipeline to be as modular as possible for any subsequent dataset, so that anyone who wishes to use the model with their own dataset can.</p>
+<p>My design was to have an initial preprocessing function that users would write themselves and is unique to the dataset, once in the correct format call one command in the root directory and it will align and create the dataset from there with the data saved as numpy files.</p>
+<p><code>Messy data -&gt; Standardize to same format -&gt; generate dataset -&gt; input into model</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Model">
+<a class="anchor" href="#Model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model<a class="anchor-link" href="#Model"> </a>
+</h1>
+<h3 id="Quantized-Embeddings">
+<a class="anchor" href="#Quantized-Embeddings" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quantized Embeddings<a class="anchor-link" href="#Quantized-Embeddings"> </a>
+</h3>
+<p>Pitch and energy predictions where quantized, so the pitch / energy predictor takes as input the phoneme embedding and predicts the feature vector, the values are then rounded to the closest vector in the feature bins. This restricts the possible search space down to a limited range, however a downside is that the desired features may be continuous in vector space this can be addressed by creating a larger number of bins. Once the predictions have been quantized an embedding layer is used to project the predictions into a descriptive vector space in a similar way to how word embeddings work in NLP.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Duration-Predictor-&amp;-Length-Regulator">
+<a class="anchor" href="#Duration-Predictor-&amp;-Length-Regulator" aria-hidden="true"><span class="octicon octicon-link"></span></a>Duration Predictor &amp; Length Regulator<a class="anchor-link" href="#Duration-Predictor-&amp;-Length-Regulator"> </a>
+</h3>
+<p>Duration predictor predicts Log values so it dosn't have to output crazy high numbers just remember to set your training target to the same value. 
+First time I coded up the length regulator I was using too many slow for loops, Once I got the quick and dirty version up and running I came back and vectorized as many parts as I could.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Transformer">
+<a class="anchor" href="#Transformer" aria-hidden="true"><span class="octicon octicon-link"></span></a>Transformer<a class="anchor-link" href="#Transformer"> </a>
+</h3>
+<p>Last year I spent several days reading blog posts and watching videos about transformer architechture from the canonical work 'Attention is all you need' <a href="https://arxiv.org/abs/1706.03762">https://arxiv.org/abs/1706.03762</a> The idea of self attention is relativly simple to implement but extremely effective across domains.
+One particular nuance that took me a while to clock was the query, key and values are projected to a larger vector space and then rearranged, splitting the vector into so called 'heads', this allows for the self attention mechanism to be implemented in parallel allowing for quicker processing speed when compared to auto regressive methods such as LSTM's.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Future-work">
+<a class="anchor" href="#Future-work" aria-hidden="true"><span class="octicon octicon-link"></span></a>Future work<a class="anchor-link" href="#Future-work"> </a>
+</h1>
+<p>This is the first blog I'm doing on programming projects im working on. 
+Its to serve as a refrence when so I don't repeat ridiculous mistakes as well as document anything intresting I'v learnt and found.. Ill be adding this to my mobile app soon which will also be open sourced and available on the google and app store.</p>
+<p>Ill also be using fastspeech2 to implement a speech cloning software.. check back for more :)</p>
+<p>Thanks for reading</p>
+<p>Original paper <a href="https://arxiv.org/abs/2006.04558">https://arxiv.org/abs/2006.04558</a></p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="torphix/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/fastpages/jupyter/2022/01/24/Fastspeech.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>An easy to use blogging platform with support for Jupyter Notebooks.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/fastai" target="_blank" title="fastai"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/fastdotai" target="_blank" title="fastdotai"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
